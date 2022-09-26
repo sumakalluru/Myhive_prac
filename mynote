@@ -1,0 +1,1905 @@
+				
+						HIVE
+-------------------------------------------------------------------------------------------------------------------
+				Class - 1
+-------------------------------------------------------------------------------------------------------------------
+ifconfig : 192.168.222.128
+
+http://192.168.222.128:50070 ---> To see name node info.
+_____________________________________________________________________________________________
+CLIENT : There r 3types of clients
+********
+1)Hive CLI :- 
+-----------
+open edge node by entering username & password.Type hive & hit enter, u will be connected to hive.
+
+PRACTICAL :
+-----------
+[cloudera@quickstart ~]$ hive
+
+Logging initialized using configuration in file:/etc/hive/conf.dist/hive-log4j.properties
+WARNING: Hive CLI is deprecated and migration to Beeline is recommended.
+hive>
+
+2)Hive web UI (HUE):-
+***********************
+ http://192.168.222.128:8888 ---> To open HUE in browser
+
+3)Thrift Server :-
+*****************
+i)By taking a duplicate session in edgenode after logging in with username & password type " beeline " & hit enter.
+ii)Now type " !connect jdbc:hive2://localhost:10000 cloudera cloudera org.apache.hive.jdbc.HiveDriver " & hit enter,u will be connected to apache hive.
+
+PRACTICAL:
+*************
+Beeline version 1.1.0-cdh5.13.0 by Apache Hive
+beeline> !connect jdbc:hive2://localhost:10000 cloudera cloudera org.apache.hive.jdbc.HiveDriver
+Connecting to jdbc:hive2://localhost:10000
+Connected to: Apache Hive (version 1.1.0-cdh5.13.0)
+Driver: Hive JDBC (version 1.1.0-cdh5.13.0)
+Transaction isolation: TRANSACTION_REPEATABLE_READ
+0: jdbc:hive2://localhost:10000> show databases;
++----------------+--+
+| database_name |
++----------------+--+
+| default              |
+| susi_db             |
++----------------+--+
+2 rows selected (1.521 seconds)
+
+____________________________________________________________________________________________________________
+-----------------------------------------------------------------------------------------------------------------------------------
+					Class - 2
+-------------------------------------------------------------------------------------------------------------------------------------
+
+hive> show databases;
+OK
+default
+susi_db
+Time taken: 1.277 seconds, Fetched: 2 row(s)
+
+1)Creating DB :
+****************
+Syntax : create database <db_name>;
+
+2) To see the DB under which we r working :
+set hive.cli.print.current.db=true;
+
+hive> set hive.cli.print.current.db=true;
+hive (hive_db)>
+
+3)Creating table :
+    **************** 
+create table hive_test(id int,name string,salary float,city string)
+row format delimited fields terminated by ','
+tblproperties("skip.header.line.count"="1");
+
+
+hive (hive_db)> describe hive_test;
+OK
+id                      int
+name                    string
+salary                  float
+city                    string
+Time taken: 0.25 seconds, Fetched: 4 row(s)
+
+hive (hive_db)> describe formatted hive_test;
+OK
+
+# col_name        data_type            comment
+
+id                         int
+name                   string
+salary                  float
+city                     string
+
+# Detailed Table Information
+Database:               hive_db
+Owner:                  cloudera
+CreateTime:             Wed Mar 16 09:57:22 PDT 2022
+LastAccessTime:         UNKNOWN
+Protect Mode:           None
+Retention:              0
+Location:               hdfs://quickstart.cloudera:8020/user/hive/warehouse/hive_db.db/hive_test
+Table Type:             MANAGED_TABLE
+Table Parameters:
+        skip.header.line.count  1
+        transient_lastDdlTime   1647449842
+
+# Storage Information
+SerDe Library:          org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+InputFormat:            org.apache.hadoop.mapred.TextInputFormat
+OutputFormat:           org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+Compressed:             No
+Num Buckets:            -1
+Bucket Columns:         []
+Sort Columns:           []
+Storage Desc Params:
+        field.delim             ,
+        serialization.format    ,
+Time taken: 0.583 seconds, Fetched: 31 row(s)
+
+
+4)LOADING THE DATA:
+***************************
+There are 2 ways to load the data :
+a)Loading data from local FS.
+b)Loading data from HDFS.
+
+a)LOAD DATA FROM LFS :-
+****************************
+load data local inpath '/home/cloudera/lfs/emp.txt' into table hive_test;
+>the above cmnd will add on data.
+
+hive_test.id    hive_test.name  hive_test.salary        hive_test.city
+100     Raju    5000.0  Mumbai
+101     Vivek   6000.0  Delhi
+102     Prakash 3000.0  Chennai
+100     Raju    5000.0  Mumbai
+101     Vivek   6000.0  Delhi
+102     Prakash 3000.0  Chennai
+Time taken: 0.114 seconds, Fetched: 6 row(s)
+
+>To see the table with column name / header :-
+set hive.cli.print.header=true;
+____________________________________________________________________________
+
+>This will truncate the existing data and overwrites into table
+load data local inpath '/home/cloudera/lfs/emp.txt'  overwrite into table hive_test;
+
+hive_test.id    hive_test.name  hive_test.salary        hive_test.city
+100     Raju    5000.0  Mumbai
+101     Vivek   6000.0  Delhi
+102     Prakash 3000.0  Chennai
+Time taken: 0.097 seconds, Fetched: 3 row(s)
+
+b)LOAD DATA FROM HDFS :-
+********************************
+load data inpath '/user/cloudera/hive_hfs/emp.txt' into table hive_test1;
+
+create table hive_test1(id int,name string,salary float,city string)
+row format delimited fields terminated by ','
+tblproperties("skip.header.line.count"="1");
+
+
+NOTE :-
+*******
+>When we load data from local FS then it will copy & paste the table
+>But ,when we load data from hadoop FS then it will cut & paste the data i.e, we can't find the data in user path.
+
+To show the table details:
+ show create table hive_test;
+____________________________________________________________________________________________________
+-------------------------------------------------------------------------------------------------------------------------------
+						Class -3
+---------------------------------------------------------------------------------------------------------------------------------
+
+5)COMPLEX DATA TYPES:
+   ***************************
+a)Array:- It is a collection of elements of same datatype.
+b)Map :- It is a collection(means elements which r available in single column) of elements which will contain key,value pairs
+c)Struct :- It is a collection of different elements(can contain same/different elements also).
+
+a)ARRAY :- It is a collection of elements of same datatype.
+eg:- bat,ball,atupma,ground all these elements are of same datatype string.
+
+id,name,sal,assets,city
+1,abc,40000,laptop$mouse$ph,hyd
+2,def,3000,laptop$mouse,pune
+3,ravi,40000,a$b$c,hyd
+4,veera,3000,d$f,pune
+
+TBL CREATION:
+*****************
+create table Arrayfile(id int,name string,sal float,assets array<string>,city string)
+row format delimited fields terminated by ','
+collection items terminated by '$'
+tblproperties("skip.header.line.count"="1")
+
+DATA LOADING:
+******************
+load data local inpath '/home/cloudera/lfs/Arrayfile.txt' into table Arrayfile;
+
+TO SEE O/P:
+*************
+>To display data for ARRAY datatype column by using Indexing in Array:- To access specific individual elements of only array column
+
+syntax:- select assets[index_nmbr] from table_name;
+
+hive> select assets[1] from Arrayfile;
+OK
+_c0
+mouse
+mouse
+b
+f
+Time taken: 0.209 seconds, Fetched: 4 row(s)
+hive> select assets[0] from Arrayfile;
+OK
+_c0
+laptop
+laptop
+a
+d
+Time taken: 0.12 seconds, Fetched: 4 row(s)
+
+>To see the column with aliasname:-
+****************************************
+hive> select assets[0] as test from Arrayfile;
+OK
+test
+laptop
+laptop
+a
+d
+Time taken: 0.156 seconds, Fetched: 4 row(s)
+
+b)MAP :- It is a collection(means elements which r available in single column) of elements which will contain key,value pairs
+********
+id,name,sal,lappy_info,pf_info,city
+1,saif,40000,laptop$mouse$bag$extended monitor$ph,pf#500$epf#200,pune
+2,arif,3000,laptop$mouse$bag$ph,pf#500,hyd
+3,mitali,40000,desktop$mouse$car$extended monitor$ph,pf#500$epf#200,hyd
+4,manas,3000,laptop$mouse$bag$extended monitor$ph,pf#500$epf#300$ppf#686,pune
+
+
+TBL CREATION:
+*****************
+create table Array_map(id int,name string,sal float,lappy_info array<string>,pf_info map<string,int>,city string)
+row format delimited fields terminated by ','
+collection items terminated by '$'
+map keys terminated by '#'
+tblproperties("skip.header.line.count"="1")
+
+DATA LOADING:
+******************
+load data local inpath '/home/cloudera/lfs/Array_map.txt' into table Array_map;
+
+TO SEE O/P:
+**************
+>To access/display data for MAP datatype column can be done by using keys i.e, colname[key]
+Syntax:- select colname["keyname"] from table_name;
+
+hive> select pf_info["pf"] from Array_map;
+OK
+_c0
+500
+500
+500
+500
+Time taken: 0.135 seconds, Fetched: 4 row(s)
+
+hive> select pf_info["epf"] from Array_map;
+OK
+_c0
+200
+NULL
+200
+300
+Time taken: 0.114 seconds, Fetched: 4 row(s)
+
+>To acces/display both array & map datatype columns in same query.
+hive> select lappy_info[1] as arrcol,pf_info["epf"] as mapcol from Array_map;
+OK
+arrcol  mapcol
+mouse   200
+mouse   NULL
+mouse   200
+mouse   300
+Time taken: 0.126 seconds, Fetched: 4 row(s)
+
+c) STRUCT DATATYPE :- It is a collection of different elements(can contain same/different elements also).
+   ***********************
+
+id,name,sal,subject,deduction,address
+1,saif,40000,hadoop$spark$scala,pf#500$epf#200,mh$pune$411048
+2,arif,3000,hive$sqoop,epf#500,mh$hinjewadi$411057
+
+TBL CREATION:
+*****************
+create table Array_struct(id int,name string,sal float,subject array<string>,deduction map<string,int>,address struct<state:string,city:string,pincode:int>)
+row format delimited fields terminated by ','
+collection items terminated by '$'
+map keys terminated by '#'
+tblproperties("skip.header.line.count"="1")
+
+DATA LOADING:
+*******************
+load data local inpath '/home/cloudera/lfs/Array_struct.txt' into table Array_struct;
+
+TO SEE O/P:
+**************
+>To acces/display data of STRUCT column:-
+syntax:- select colname.collectioncolname from table_name;
+
+hive> select address.city from Array_struct;
+OK
+pune
+hinjewadi
+Time taken: 0.164 seconds, Fetched: 2 row(s)
+hive> select address.state from Array_struct;
+OK
+mh
+mh
+Time taken: 0.114 seconds, Fetched: 2 row(s)
+hive> select address.pincode from Array_struct;
+OK
+411048
+411057
+Time taken: 0.152 seconds, Fetched: 2 row(s)
+____________________________________________________________________________________________________________________________________
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+							Class - 4
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+TYPES OF TABLES :-
+********************
+>There are 2 types of tables :
+a)Managed/Internal table
+b)External table
+
+a) MANAGED/INTERNAL TABLE :-
+************************************
+1)By Default,whenever we create a table it's a Managed/Internal table.
+2)Managed tables always gets created under the default location of Hive i.e, /user/hive/warehouse/, if we don't specify the location argument.
+If we wanted to change the location of a managed table then we should use an argument called location while table creation.
+3)whenever we drop the managed table, Table gets dropped also our underlying HDFS directory gets dltd
+(i.e,table with both meta data and actual data will get dltd).
+
+SYNTAX FOR MANAGED TABLE CREATION :-
+************************************************
+create table mgd_test(id int,name string)
+row format delimited fields terminated by ','
+location '/user/cloudera/hive';
+
+
+b)EXTERNAL TABLE :-
+**********************
+1)To create an external table in hive we must specify " external " keyword explicitly while table creation.
+2)If we don't specify location as an argument again the dir would be created under the default hive location  i.e, /user/hive/warehouse/
+If we want to create a dir other than in hive default location then we should specify the path with an argument called location explicitly.
+3)whenever we drop an external table, Table gets dropped but our underlying HDFS directory data is still available.
+(i.e,table with meta data will get dltd but actual data will remain without dltn ).
+
+SYNTAX FOR EXTERNAL TABLE CREATION :-
+************************************************
+create external table ext_test(id int,name string)
+row format delimited fields terminated by ','
+location '/user/cloudera/hive';
+__________________________________________________________________________________________
+			
+6)MANAGED TABLE without specifying location :-
+******************************************************
+101,Ram,Shirali,NIBM
+102,Saif,Shaikh,Kondhwa
+103,Ram,Shirali,Balewadi
+104,Mitlai,Kashiv,Pimple
+105,Manas,Tiwari,Blueridge
+
+create table mng_emp(id int,fname string,lname string,city string)
+row format delimited fields terminated by ','
+tblproperties("skip.header.line.count"="1")
+
+load data local inpath '/home/cloudera/REVISION/mngtbl.txt' overwrite into table mng_emp
+
+hive> select * from mng_emp;
+OK
+101     Ram     Shirali NIBM
+102     Saif    Shaikh  Kondhwa
+103     Ram     Shirali Balewadi
+104     Mitlai  Kashiv  Pimple
+105     Manas   Tiwari  Blueridge
+
+ HIVE WAREHOUSE DIRECTORY IN HDFS BEFORE DROPPING A MANAGED TABLE
+*********************************************************************************************
+[cloudera@quickstart ~]$ hdfs dfs -ls /user/hive/warehouse/rev_db.db
+Found 6 items
+drwxrwxrwx   - cloudera supergroup          0 2022-05-06 00:27 /user/hive/warehouse/rev_db.db/arrayfile
+drwxrwxrwx   - cloudera supergroup          0 2022-05-05 09:21 /user/hive/warehouse/rev_db.db/emptxt
+drwxrwxrwx   - cloudera supergroup          0 2022-05-05 09:36 /user/hive/warehouse/rev_db.db/emptxt1
+drwxrwxrwx   - cloudera supergroup          0 2022-05-06 02:02 /user/hive/warehouse/rev_db.db/mapfile
+drwxrwxrwx   - cloudera supergroup          0 2022-05-06 05:17 /user/hive/warehouse/rev_db.db/mng_emp
+drwxrwxrwx   - cloudera supergroup          0 2022-05-06 02:33 /user/hive/warehouse/rev_db.db/structfile
+[cloudera@quickstart ~]$ hdfs dfs -ls /user/hive/warehouse/rev_db.db/mng_emp
+Found 1 items
+-rwxrwxrwx   1 cloudera supergroup        142 2022-05-06 05:17 /user/hive/warehouse/rev_db.db/mng_emp/mngtbl.txt
+
+
+DROPPING MANAGED TABLE :-
+*********************************
+hive> drop table mng_emp;
+OK
+
+hive> show tables;
+OK
+arrayfile
+emptxt
+emptxt1
+mapfile
+structfile
+
+HIVE WAREHOUSE DIRECTORY IN HDFS AFTER DROPPING A MANAGED TABLE
+******************************************************************************************
+[cloudera@quickstart ~]$ hdfs dfs -ls /user/hive/warehouse/rev_db.db/
+Found 5 items
+drwxrwxrwx   - cloudera supergroup          0 2022-05-06 00:27 /user/hive/warehouse/rev_db.db/arrayfile
+drwxrwxrwx   - cloudera supergroup          0 2022-05-05 09:21 /user/hive/warehouse/rev_db.db/emptxt
+drwxrwxrwx   - cloudera supergroup          0 2022-05-05 09:36 /user/hive/warehouse/rev_db.db/emptxt1
+drwxrwxrwx   - cloudera supergroup          0 2022-05-06 02:02 /user/hive/warehouse/rev_db.db/mapfile
+drwxrwxrwx   - cloudera supergroup          0 2022-05-06 02:33 /user/hive/warehouse/rev_db.db/structfile
+[cloudera@quickstart ~]$ hdfs dfs -ls /user/hive/warehouse/rev_db.db/mng_emp
+ls: `/user/hive/warehouse/rev_db.db/mng_emp': No such file or directory
+
+NOTE :-
+******
+>When we drop a managed table the meta data/the structure of table will get dropped & also the directory in hive warehouse which stores the 
+actual data will also get dltd.
+
+7)EXTERNAL TABLE without specifying location :-
+******************************************************
+id,fname,lname,city
+101,Ram,Shirali,NIBM
+102,Saif,Shaikh,Kondhwa
+103,Ram,Shirali,Balewadi
+104,Mitlai,Kashiv,Pimple
+105,Manas,Tiwari,Blueridge
+
+create external table ext_emp(id int,fname string,lname string,city string)
+row format delimited fields terminated by ','
+tblproperties("skip.header.line.count"="1")
+
+hive> describe formatted ext_emp;
+OK
+# col_name              data_type               comment
+
+id                      int
+fname                   string
+lname                   string
+city                    string
+
+# Detailed Table Information
+Database:               rev_db
+Owner:                  cloudera
+CreateTime:             Fri May 06 05:43:50 PDT 2022
+LastAccessTime:         UNKNOWN
+Protect Mode:           None
+Retention:              0
+Location:               hdfs://quickstart.cloudera:8020/user/hive/warehouse/rev_db.db/ext_emp
+Table Type:             EXTERNAL_TABLE
+Table Parameters:
+        EXTERNAL                TRUE
+        skip.header.line.count  1
+        transient_lastDdlTime   1651841030
+
+# Storage Information
+SerDe Library:          org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+InputFormat:            org.apache.hadoop.mapred.TextInputFormat
+OutputFormat:           org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+Compressed:             No
+Num Buckets:            -1
+Bucket Columns:         []
+Sort Columns:           []
+Storage Desc Params:
+        field.delim             ,
+        serialization.format    ,
+
+LOADING DATA INTO EXTERNAL TABLE :-
+*********************************************
+load data local inpath '/home/cloudera/REVISION/extbl.txt' overwrite into table ext_emp
+
+hive> select * from ext_emp;
+OK
+ext_emp.id      ext_emp.fname   ext_emp.lname   ext_emp.city
+101     Ram     Shirali NIBM
+102     Saif    Shaikh  Kondhwa
+103     Ram     Shirali Balewadi
+104     Mitlai  Kashiv  Pimple
+105     Manas   Tiwari  Blueridge
+
+HIVE WAREHOUSE DIRECTORY IN HDFS BEFORE DROPPING AN EXTERNAL TABLE
+*********************************************************************************************
+[cloudera@quickstart ~]$ hdfs dfs -ls /user/hive/warehouse/rev_db.db
+Found 6 items
+drwxrwxrwx   - cloudera supergroup          0 2022-05-06 00:27 /user/hive/warehouse/rev_db.db/arrayfile
+drwxrwxrwx   - cloudera supergroup          0 2022-05-05 09:21 /user/hive/warehouse/rev_db.db/emptxt
+drwxrwxrwx   - cloudera supergroup          0 2022-05-05 09:36 /user/hive/warehouse/rev_db.db/emptxt1
+drwxrwxrwx   - cloudera supergroup          0 2022-05-06 05:47 /user/hive/warehouse/rev_db.db/ext_emp
+drwxrwxrwx   - cloudera supergroup          0 2022-05-06 02:02 /user/hive/warehouse/rev_db.db/mapfile
+drwxrwxrwx   - cloudera supergroup          0 2022-05-06 02:33 /user/hive/warehouse/rev_db.db/structfile
+[cloudera@quickstart ~]$ hdfs dfs -ls /user/hive/warehouse/rev_db.db/ext_emp
+Found 1 items
+-rwxrwxrwx   1 cloudera supergroup        142 2022-05-06 05:47 /user/hive/warehouse/rev_db.db/ext_emp/extbl.txt
+[cloudera@quickstart ~]$ hdfs dfs -cat /user/hive/warehouse/rev_db.db/ext_emp/extbl.txt
+id,fname,lname,city
+101,Ram,Shirali,NIBM
+102,Saif,Shaikh,Kondhwa
+103,Ram,Shirali,Balewadi
+104,Mitlai,Kashiv,Pimple
+105,Manas,Tiwari,Blueridge
+
+DROPPING EXTERNAL TABLE :-
+*********************************
+hive> drop table ext_emp;
+OK
+
+hive> show tables;
+OK
+tab_name
+arrayfile
+emptxt
+emptxt1
+mapfile
+structfile
+
+hive> show create table ext_emp;
+FAILED: SemanticException [Error 10001]: Table not found ext_emp
+
+HIVE WAREHOUSE DIRECTORY IN HDFS AFTER DROPPING AN EXTERNAL TABLE
+*******************************************************************************************
+[cloudera@quickstart ~]$ hdfs dfs -ls /user/hive/warehouse/rev_db.db/
+Found 6 items
+drwxrwxrwx   - cloudera supergroup          0 2022-05-06 00:27 /user/hive/warehouse/rev_db.db/arrayfile
+drwxrwxrwx   - cloudera supergroup          0 2022-05-05 09:21 /user/hive/warehouse/rev_db.db/emptxt
+drwxrwxrwx   - cloudera supergroup          0 2022-05-05 09:36 /user/hive/warehouse/rev_db.db/emptxt1
+drwxrwxrwx   - cloudera supergroup          0 2022-05-06 05:47 /user/hive/warehouse/rev_db.db/ext_emp
+drwxrwxrwx   - cloudera supergroup          0 2022-05-06 02:02 /user/hive/warehouse/rev_db.db/mapfile
+drwxrwxrwx   - cloudera supergroup          0 2022-05-06 02:33 /user/hive/warehouse/rev_db.db/structfile
+[cloudera@quickstart ~]$ hdfs dfs -ls /user/hive/warehouse/rev_db.db/ext_emp
+Found 1 items
+-rwxrwxrwx   1 cloudera supergroup        142 2022-05-06 05:47 /user/hive/warehouse/rev_db.db/ext_emp/extbl.txt
+[cloudera@quickstart ~]$ hdfs dfs -cat /user/hive/warehouse/rev_db.db/ext_emp/extbl.txt
+id,fname,lname,city
+101,Ram,Shirali,NIBM
+102,Saif,Shaikh,Kondhwa
+103,Ram,Shirali,Balewadi
+104,Mitlai,Kashiv,Pimple
+105,Manas,Tiwari,Blueridge
+
+NOTE :-
+******
+>When we drop an external table the meta data/the structure of table will get dropped/dltd but  the directory in hive warehouse which stores the 
+actual data will not get dltd/dropped.
+
+8)MANAGED TABLE by specifying location :-
+*************************************************
+create table mngloc_emp(id int,fname string,lname string,city string)
+row format delimited fields terminated by ','
+location '/user/cloudera/REVISION/ext.txt'
+tblproperties("skip.header.line.count"="1")
+
+hive> select * from ext_emp;
+OK
+mngloc_emp.id   mngloc_emp.fname        mngloc_emp.lname        mngloc_emp.city
+101     Ram     Shirali NIBM
+102     Saif    Shaikh  Kondhwa
+103     Ram     Shirali Balewadi
+104     Mitlai  Kashiv  Pimple
+105     Manas   Tiwari  Blueridge
+
+9)EXTERNAL TABLE by specifying location :-
+***********************************************
+create external table extloc_emp(id int,fname string,lname string,city string)
+row format delimited fields terminated by ','
+location '/user/cloudera/REVISION/ext.txt'
+tblproperties("skip.header.line.count"="1")
+
+hive> select * from ext_emp;
+OK
+ext_emp.id      ext_emp.fname   ext_emp.lname   ext_emp.city
+101     Ram     Shirali NIBM
+102     Saif    Shaikh  Kondhwa
+103     Ram     Shirali Balewadi
+104     Mitlai  Kashiv  Pimple
+105     Manas   Tiwari  Blueridge
+
+NOTE :-
+*******
+>When we are creating a table with location then there is no need to load the data, bcz under the directory if the files are available we can 
+   see data for that without using load cmnd.
+>When we are passing loacation argument in table creation then we need to give the location upto directory only but should not specify file also.
+
+
+CMND TO CHANGE THE TABLE NAME :-
+********************************************
+ alter table ext_emp rename to extloc_emp;
+
+__________________________________________________________________________________________
+----------------------------------------------------------------------------------------------------------------------------------
+						Class - 5
+----------------------------------------------------------------------------------------------------------------------------------
+FUNCTIONS :
+**************
+
+1)unix_timestamp: we'll get current unix timestamp in seconds.
+
+2)from_unixtime : It converts seconds into datetime.
+
+3)year/quarter/month/day/hour/minute/second : It will select year,quarter,month,day,hour,minute&second from a given datetime.
+
+4)to_date : It will display date from a given datetime/timestamp.
+
+5)weekofyear : It will display week of the year.
+
+6)datediff: It will display the date differences
+
+7)date_add : It adds/subtract days to a given date.
+
+8)date_sub : It subtract days from a given date.
+
+9)current_date : It displays current date.
+
+10)last_day : It displays the last day from the given date.
+
+11)ceil : This will return the next integral value.
+
+12)floor: This will return the same integral value.
+
+13)round: This will increment to nxt integral value if precision is 5 or morethan 5 else it'll give the same integral value.
+
+14)concat: It concatenates 2 string values specified by the delimiter.
+
+15)length: It counts the length including spaces.
+
+16)lower: It converts the string to lower case.
+
+17)upper: It converts the string to upper case.
+
+18)lpad(string str,int length,string pad): It pad to a length of length(integer value) to left.
+
+19)rpad(string str,int length,string pad): It pad to a length of length(integer value) to right.
+
+20)trim: It trims spaces from both sides.
+
+21)ltrim: It trims spaces from left side.
+
+22)rtrim: It trims spaces from right side.
+
+23)reverse: It reverses the given string.
+
+24)split(STRING str, STRING pat): It will split the string based on the given pattern.
+
+25)substr(string,start pos,len): This will return the characters from the given specified string.
+
+26)instr(string,pattern): This will return the position of the charecter specified.
+
+27)nvl: It replaces nullvalues with a specified string.
+
+28)coalesce: It returns first not null values from a string.If all the values are null then null is displayed.
+
+29)if/case: It gives the flexibility to use if/else statement.
+
+30)rank: In this function sequence is skipped.
+
+31)dense_rank: In this function sequence is not skipped.
+
+32)row_number: It gives an incremented value in a sequence.
+
+33)Explode: Explodes an array to multiple rows.
+
+34)Lateral View: The lateral views are used along with EXPLODE or INLINE functions.
+Both functions work on the complex data types such as array.Explode function in the lateral view can contain embedded functions such as map,array,struct,stack,etc.
+____________________________________________________________________________________________________________________________________
+--------------------------------------------------------------------------------------------------------------------------------------------------------------
+							Class - 6
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+HIVE PARTITIONS :
+********************
+>Tables,Partitions & Buckets are the parts of Hive data modelling.
+
+What is Partitions?
+>Hive Partitions is a way to organizes tables into partitions by dividing tables into different parts based on partition keys.
+>Table partitioning means dividing table data into some parts based on the values of particular columns like date/country,
+   which segregates the i/p records into different files/directories based on date/country.
+>Partitioning can be done based on more than one column which will impose multi-dimensional structure on directory storage.For e.g. in addition to partitioning 
+   records by date column, we can also sub-divide the single day records into country wise seperate files by including country column into partitioning.
+
+ADVANTAGES :-
+****************
+1)Partitioning is used for distributung execution load horizontally.
+2)As the data is stored in slices/parts, query response time is faster to process the small parts of data instead of searching in the entire data set.
+3)For e.g. in a larger table where the table is partitioned by country, then selecting users of country 'IN' will just scan one directory 'country=IN' instead of all directories.
+
+DISADVANTAGES :-
+********************
+1)Having too many partitions in table create large no.of files/directories in HDFS, which is an overhead to NN since it has to keep all metadata for 
+    file system in memory only.
+2)Partitions may optimized some queries based on where clause but may be less responsive for other queries based on grouping etc.
+
+NOTE:-
+******
+We didn't include state column in table definition but included in partition definition.If we include in table definition then it will throw an error.
+
+EXTERNAL PARTITION TABLE :-
+***********************************
+We can create external partition table as well just by using the keyword EXTERNAL in the CREATE statement.For creation of external partitioned tables, we do not 
+need to mention LOCATION clause as we'll mention locations of each partitions seperately while inserting data into table.
+
+STEPS TO CREATE A PARTITIONED TABLE :-
+***********************************************
+>For a partition table,we can't load data into table by using load cmnd.
+>We should create a normal intermediate / non partitioned table & load data into the partitioned table by using insert cmnd .
+>Then by using insert cmnd we should load data into partitioned table from a non partitioned / intermediate table.
+>We can only insert data to a partition table with insert into / insert overwrite cmnd then only the mapreduce get triggered.
+>Only when the mapreduce get triggered the data will be get placed in a correct partitions else it won't load in that way.
+>For dynamic partition it will not allow to trigger until we set dynamic partition to nonstrict mode.
+ set hive.exec.dynamic.partition.mode=nonstrict ---> we can't apply dynamic partition in strict mode only we can apply in nonstrict mode
+
+TYPES OF INSERTING DATA INTO PARTITIONED TABLES :- 
+****************************************************************
+Data insertion into Partitioned tables can be done in 2 types
+1)Static Partition
+2)Dynamic Partition
+
+_____________________________________________________________________________________________
+
+				PRACTICAL IN HIVE TERMINAL :
+				************************************
+SENARIO-1 :-
+*************
+Client is sending 3 different files & asking us to maintain all 3 types of data under 1 table. So we have to execute 3 different load cmnds .
+Here we partition the table by country inorder to place all 3 types of data in a single partitioned table.
+
+DATA :
+*******
+>emp_ind.txt
+id,name,city,age
+100,Kaushal,Mumbai,40
+102,Sudha,Chennai,39
+402,King,Blore,52
+
+>emp_uk.txt
+id,name,city,age
+300,John,London,40
+429,King,London,33
+404,Samuel,Edenburg,52
+
+>emp_us.txt
+id,name,city,age
+200,Hari,CA,40
+429,Ram,Texas,39
+404,King,Dallas,52
+
+CREATING A PARTITION TABLE FOR SENARIO-1 :-
+******************************************************
+create table part(id int,name string,city string,age int)
+partitioned by (country string)
+row format delimited fields terminated by ','
+tblproperties("skip.header.line.count"="1")
+
+NOTE :
+*******
+>Whenever we load data into partitioned table, directory gets created with the partitioning column name. so we want to give the name for partition column 
+   in static insertion of data.
+
+LOADING DATA :-
+*******************
+load data local inpath '/home/cloudera/REVISION/eind.txt' into table part partition(country='IND');
+load data local inpath '/home/cloudera/REVISION/euk.txt' into table part partition(country='UK');
+load data local inpath '/home/cloudera/REVISION/eus.txt' into table part partition(country='US');
+
+O/P :
+*****
+hive (rev_db)> select *from part;
+OK
+100     Kaushal Mumbai  40      IND
+102     Sudha   Chennai 39      IND
+402     King    Blore   52      IND
+300     John    London  40      UK
+429     King    London  33      UK
+404     Samuel  Edenburg        52      UK
+200     Hari    CA      40      US
+429     Ram     Texas   39      US
+404     King    Dallas  52      US
+
+DIRECTORY IN HIVE WAREHOUSE :
+***************************************
+[cloudera@quickstart ~]$ hdfs dfs -ls /user/hive/warehouse/rev_db.db/part
+Found 3 items
+drwxrwxrwx   - cloudera supergroup          0 2022-05-06 23:13 /user/hive/warehouse/rev_db.db/part/country=IND
+drwxrwxrwx   - cloudera supergroup          0 2022-05-06 23:28 /user/hive/warehouse/rev_db.db/part/country=UK
+drwxrwxrwx   - cloudera supergroup          0 2022-05-06 23:28 /user/hive/warehouse/rev_db.db/part/country=US
+
+>Here the data that we inserted into partition table by static partition load , directories with partition column name got created under HIVE WAREHOUSE.
+
+ADD & DROP PARTITIONS IN HIVE :-
+***************************************
+ADD PARTITION :-
+*******************
+load data local inpath '/home/cloudera/REVISION/eaus.txt' into table part partition(country='AUS');
+
+O/P :
+*****
+hive (rev_db)> select * from part;
+OK
+200     Hari    CA      40      AUS
+429     Ram     Texas   39      AUS
+404     King    Dallas  52      AUS
+100     Kaushal Mumbai  40      IND
+102     Sudha   Chennai 39      IND
+402     King    Blore   52      IND
+300     John    London  40      UK
+429     King    London  33      UK
+404     Samuel  Edenburg        52      UK
+200     Hari    CA      40      US
+429     Ram     Texas   39      US
+404     King    Dallas  52      US
+
+DATA IN HIVE WAREHOUSE DIRECTORY  :
+**********************************************
+[cloudera@quickstart ~]$ hdfs dfs -ls /user/hive/warehouse/rev_db.db/part
+Found 4 items
+drwxrwxrwx   - cloudera supergroup          0 2022-05-07 10:55 /user/hive/warehouse/rev_db.db/part/country=AUS
+drwxrwxrwx   - cloudera supergroup          0 2022-05-06 23:13 /user/hive/warehouse/rev_db.db/part/country=IND
+drwxrwxrwx   - cloudera supergroup          0 2022-05-06 23:28 /user/hive/warehouse/rev_db.db/part/country=UK
+drwxrwxrwx   - cloudera supergroup          0 2022-05-06 23:28 /user/hive/warehouse/rev_db.db/part/country=US
+
+			(or)
+
+another way of adding partitioned column :-
+************************************************
+alter table <table_name> add
+partition(<col_name>) location 'file_path'
+partition(<col_name>) location 'file_path';
+
+DROP PARTITION :-
+********************
+alter table part drop partition(country='AUS');
+
+-----------------------------------------------------------------------------------------------------------------------
+					Class - 7
+-----------------------------------------------------------------------------------------------------------------------
+
+STATIC PARTITION SENARIO-2 :-
+***********************************
+Client sending single file with all the data.
+
+FILE-2 :
+*******
+id,name,city,age,country
+100,Kaushal,Mumbai,40,IND
+102,Sudha,Chennai,39,IND
+402,King,Blore,52,IND
+300,John,London,40,UK
+429,King,London,33,UK
+404,Samuel,Edenburg,52,UK
+200,Hari,CA,40,US
+429,Ram,Texas,39,US
+404,King,Dallas,52,US
+
+NOTE:
+*******
+>Whenever we are trying to create partition table,the partitioned column should not be part of create table stmnt.
+
+CREATING A PARTITION TABLE FOR SENARIO-2 :-
+******************************************************
+create table part_stat1(id int,name string,city string,age int)
+partitioned by (country string)
+row format delimited fields terminated by ','
+
+LOADING DATA :-
+*******************
+load data local inpath '/home/cloudera/REVISION/eall.txt' into table part_stat1 partition(country='IND');
+
+O/P :
+*****
+hive (rev_db)> select * from part_stat1;
+OK
+100     Kaushal Mumbai  40      IND
+102     Sudha   Chennai 39      IND
+402     King    Blore   52      IND
+300     John    London  40      IND
+429     King    London  33      IND
+404     Samuel  Edenburg        52      IND
+200     Hari    CA      40      IND
+429     Ram     Texas   39      IND
+404     King    Dallas  52      IND
+
+>Here the partitioned column data is displayed as per given partition column name in load cmnd.
+
+DATA IN HIVE WAREHOUSE DIRECTORY  :
+**********************************************
+[cloudera@quickstart ~]$ hdfs dfs -ls /user/hive/warehouse/rev_db.db/part_stat1
+Found 1 items
+drwxrwxrwx   - cloudera supergroup          0 2022-05-07 00:28 /user/hive/warehouse/rev_db.db/part_stat1/country=IND
+
+[cloudera@quickstart ~]$ hdfs dfs -ls /user/hive/warehouse/rev_db.db/part_stat1/country=IND
+Found 1 items
+-rwxrwxrwx   1 cloudera supergroup        228 2022-05-07 00:28 /user/hive/warehouse/rev_db.db/part_stat1/country=IND/eall.txt
+
+[cloudera@quickstart ~]$ hdfs dfs -cat /user/hive/warehouse/rev_db.db/part_stat1/country=IND/eall.txt
+id,name,city,age,country
+100,Kaushal,Mumbai,40,IND
+102,Sudha,Chennai,39,IND
+402,King,Blore,52,IND
+300,John,London,40,UK
+429,King,London,33,UK
+404,Samuel,Edenburg,52,UK
+200,Hari,CA,40,US
+429,Ram,Texas,39,US
+404,King,Dallas,52,US
+
+>Here instead of only storing given partitioned column data all data is pushed into the directory.
+>To over come the above data anomalies/data mismatch, we 1st need to create an intermediary table & load the data into it & from 
+   there we should load data into main partition table by using "INSERT stmnt".
+
+CREATING A STAGING TABLE FOR SENARIO-2 :-
+*****************************************************
+create table stg_part_stat(id int,name string,city string,age int,country string)
+row format delimited fields terminated by ','
+tblproperties("skip.header.line.count"="1")
+
+LOADING DATA INTO STAGING TABLE :-
+*********************************************
+load data local inpath '/home/cloudera/REVISION/eall.txt' into table stg_part_stat;
+
+TRUNCATING DATA FOR SCENARIO-2 PARTITIONED TABLE :
+********************************************************************
+truncate table part_stat1;
+
+INSERTING DATA INTO TRUNCATED TABLE BY USING STAGING TABLE :-
+*********************************************************************************
+insert into table part_stat1 partition(country='IND') select id,name,city,age from stg_part_stat where country='IND';
+insert into table part_stat1 partition(country='UK') select id,name,city,age from stg_part_stat where country='UK';
+insert into table part_stat1 partition(country='US') select id,name,city,age from stg_part_stat where country='US';
+
+O/P :-
+*****
+hive (rev_db)> select * from part_stat1;
+OK
+100     Kaushal Mumbai  40      IND
+102     Sudha   Chennai 39      IND
+402     King    Blore   52      IND
+300     John    London  40      UK
+429     King    London  33      UK
+404     Samuel  Edenburg        52      UK
+200     Hari    CA      40      US
+429     Ram     Texas   39      US
+404     King    Dallas  52      US
+
+>Here we are shifting the data in staging/intermediate table into main partitioned table.
+
+
+DATA IN HIVE WAREHOUSE DIRECTORY  :
+**********************************************
+[cloudera@quickstart ~]$ hdfs dfs -ls /user/hive/warehouse/rev_db.db/part_stat1
+Found 3 items
+drwxrwxrwx   - cloudera supergroup          0 2022-05-07 10:19 /user/hive/warehouse/rev_db.db/part_stat1/country=IND
+drwxrwxrwx   - cloudera supergroup          0 2022-05-07 10:24 /user/hive/warehouse/rev_db.db/part_stat1/country=UK
+drwxrwxrwx   - cloudera supergroup          0 2022-05-07 10:25 /user/hive/warehouse/rev_db.db/part_stat1/country=US
+
+[cloudera@quickstart ~]$ hdfs dfs -ls /user/hive/warehouse/rev_db.db/part_stat1/country=IND
+Found 1 items
+-rwxrwxrwx   1 cloudera supergroup         61 2022-05-07 10:19 /user/hive/warehouse/rev_db.db/part_stat1/country=IND/000000_0
+
+[cloudera@quickstart ~]$ hdfs dfs -cat /user/hive/warehouse/rev_db.db/part_stat1/country=IND/000000_0
+100,Kaushal,Mumbai,40
+102,Sudha,Chennai,39
+402,King,Blore,52
+
+
+[cloudera@quickstart ~]$ hdfs dfs -ls /user/hive/warehouse/rev_db.db/part_stat1/country=UK
+Found 1 items
+-rwxrwxrwx   1 cloudera supergroup         61 2022-05-07 10:24 /user/hive/warehouse/rev_db.db/part_stat1/country=UK/000000_0
+
+[cloudera@quickstart ~]$ hdfs dfs -cat /user/hive/warehouse/rev_db.db/part_stat1/country=UK/000000_0
+300,John,London,40
+429,King,London,33
+404,Samuel,Edenburg,52
+
+
+[cloudera@quickstart ~]$ hdfs dfs -ls /user/hive/warehouse/rev_db.db/part_stat1/country=US
+Found 1 items
+-rwxrwxrwx   1 cloudera supergroup         51 2022-05-07 10:25 /user/hive/warehouse/rev_db.db/part_stat1/country=US/000000_0
+
+[cloudera@quickstart ~]$ hdfs dfs -cat /user/hive/warehouse/rev_db.db/part_stat1/country=US/000000_0
+200,Hari,CA,40
+429,Ram,Texas,39
+404,King,Dallas,52
+
+NOTE :-
+*******
+METHOD-1 :- To load data by using load cmnd as shown in scenario 1
+METHOD-2 :- To load data by using insert stmnt by shifting data from normal staging table to partitioned table as shown in scenario 2
+
+>Whenever we are trying to use " insert overwrite/insert into " cmnd into the main static partition table, we should not specify partition column in the select clause.
+
+>Whenever we use load stmnt, file will be saved under hive warehouse directory by filename but if we use insert stmnt to load data into partition table then file will 
+    be stored as partfile 0000 under hive warehouse directory. 
+
+QUERY TO SEE THE PARTITIIONS FOR A PARTITIONED TABLE IN HIVE :-
+********************************************************************************
+hive (rev_db)> show partitions part_stat1;
+OK
+country=IND
+country=UK
+country=US
+
+NOTE:
+*******
+>Whenever we are trying to create static partition table,the partitioned column should not be under create table stmnt.
+>Whenever we are trying to write insert,overwrite,insertinto cmnd into the partition table then we should not specify partition column in the select clause.
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+						Class - 8
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+			DYNAMIC PARTITIONS:
+			***************************
+STEPS TO INSERT DATA INTO PARTITIONED TABLE by  STATIC PARTITION :-
+************************************************************************************
+1)create a non partitioned table & load data into it.
+2)create a partitioned table by specifying "partition by" column.
+3)For a dynamic partition, We should set dynamic partiton as nonstrict
+      set hive.exec.dynamic.partition.mode=nonstrict
+4)load data into partition table from the non partition table by using insert into / insert overwrite cmnd.
+5)there is no need of specifying value for partitioned column & using of where clause, if we want to use where clause we can use but thats not mandatory.
+
+CREATING AN INTERMIDIATE TABLE & LOAD DATA INTO IT:
+*********************************************************************
+create table intr_dynpart(id int,name string,city string,age int,country string)
+row format delimited fields terminated by ','
+tblproperties("skip.header.line.count"="1")
+
+LOADING DATA INTO STAGING TABLE :-
+*********************************************
+load data local inpath '/home/cloudera/REVISION/eall.txt' into table intr_dynpart;
+
+O/P :-
+*****
+hive (rev_db)> select * from intr_dynpart;
+OK
+100     Kaushal Mumbai  40      IND
+102     Sudha   Chennai 39      IND
+402     King    Blore   52      IND
+300     John    London  40      UK
+429     King    London  33      UK
+404     Samuel  Edenburg        52      UK
+200     Hari    CA      40      US
+429     Ram     Texas   39      US
+404     King    Dallas  52      US
+
+CREATING MAIN PARTITION TABLE :-
+******************************************
+create table dyn_part(id int,name string,city string,age int)
+partitioned by (country string)
+row format delimited fields terminated by ','
+___________________________________________________________________________________________________________________
+NOTE:
+*******
+There are 3 changes b/w static & dynamic partitions
+1)In dynamic partition we should not specify the value for partitioned column as we specify in static
+2)In dynamic partition,Whatever partitions columns are there, those partition columns should be mentioned as the last columns in select query.
+3)In dynamic partition,there is no need of using where clause.
+_____________________________________________________________________________________________________________________
+
+SET THIS PROPERTY :-
+**********************
+set hive.exec.dynamic.partition.mode=nonstrict
+
+INSERTING DATA INTO PARTITIONED TABLE BY USING STAGING TABLE :-
+***********************************************************************************
+insert into table dyn_part partition(country) select id,name,city,age,country from intr_dynpart; 
+
+O/P :-
+*****
+hive (rev_db)> select * from dyn_part;
+OK
+100     Kaushal Mumbai  40      IND
+102     Sudha   Chennai 39      IND
+402     King    Blore   52      IND
+300     John    London  40      UK
+429     King    London  33      UK
+404     Samuel  Edenburg        52      UK
+200     Hari    CA      40      US
+429     Ram     Texas   39      US
+404     King    Dallas  52      US
+
+DATA IN HIVE WAREHOUSE DIRECTORY  :
+**********************************************
+[cloudera@quickstart ~]$ hdfs dfs -ls /user/hive/warehouse/rev_db.db/dyn_part
+Found 3 items
+drwxrwxrwx   - cloudera supergroup          0 2022-05-07 11:39 /user/hive/warehouse/rev_db.db/dyn_part/country=IND
+drwxrwxrwx   - cloudera supergroup          0 2022-05-07 11:39 /user/hive/warehouse/rev_db.db/dyn_part/country=UK
+drwxrwxrwx   - cloudera supergroup          0 2022-05-07 11:39 /user/hive/warehouse/rev_db.db/dyn_part/country=US
+
+NOTE :-
+*******
+For DYNAMIC partitions we should set some properties (in projects we go with below 4properties) :
+
+ set hive.exec.dynamic.partition.mode=nonstrict ---> we can't apply dynamic partition in strict mode only we can apply in nonstrict mode.
+ set hive.exec.dynamic.partition=true ---> enabling dynamic partition
+ set hive.exec.max.dynamic.partitions=100
+ set hive.exec.max.dynamic.partitions.pernode=100
+
+>in strict mode we can apply only static partition but we can't apply dynamic partition.
+
+THEORITICAL :-
+****************
+PROS :
+******
+1)It's used for distributing execution load horizontally.
+2)Query response is faster as query is processed on a small dataset instead of entire dataset.
+3)If we selected records for US, records would be fetched from directory 'Country=US' from all directories/partitions.
+
+CONS :
+*******
+1)Having large no.of partitions create no.of files/directories in HDFS, which creates overhead for NN as it maintains metadata.
+2)It may optimize cretain queries based on where clause, but may cause slow response for queries based on grouping clause.
+
+________________________________________________________________________________________________________________________
+---------------------------------------------------------------------------------------------------------------------------------------------------
+							BUCKETS
+							***********
+THEORY :-
+*********
+>At times,even aftr partitioning on a particular fields, the partitioned file size doesn't match with the actual expectation & remains huge & we want to manage the 
+   partition rslts into different parts.
+>To overcome this prblm of partitioning, Hive provides Bucketing concept, which allows user to divide table datasets into more managable parts.
+
+Hive partition divides table into no.of partitions & these partitions can be further subdivided into more manageable parts known as BUCKETS or CLUSTERS . 
+The Bucketing concept is based on Hash function, which depends on the type of the bucketing column.
+Records which are bucketed by the same column will always be saved in the same bucket.
+
+Here CLUSTERED BY clause is used to divide the table into buckets.
+In Hive Partition, each partition will be created as directory.But in Hive Buckets, each bucket will be created as file.
+Bucketing can also be done even without partitioning on hive tables.
+
+ADVANTAGES OF BUCKETING :-
+***********************************
+Bucketing can sometimes be more efficient when used alone.
+Bucket is physically a fine & all data files are equal sized parts, map-side joins will be faster on the bucketed tables.
+
+ADVANTAGES OF BUCKETING :-
+***********************************
+1)It provides faster query response like portioning.
+2)In bucketing due to equal volumes of data in each partition, joins at Map side wil be quicker.
+
+__________________________________________________________________________________________________________
+
+NOTE :-
+*******
+>Bydefault hive will not allow us to create bucket tables, so we have to enforce the bucket table as true 
+   set hive.enforce.bucketing=true;
+
+> For partitioned table & bucket table we cannot use load data cmnd to load a file.
+>If we load it via load cmnd to a partition / bucket table the data will not will get partition / bucketed.
+>so we have to use insert into / insert overwrite cmnd to the partition / bucketed table & then only our data will get partitioned / bucketed.
+
+>The difference b/w partition & Bucket is that,
+   In PARTITION, we decide which record / data should go to which partition.
+   In Bucket, it internally decides which data has to go to which bucket.
+
+
+Internal mechansm of Bucket:
+**********************************
+
+How bucket is deciding which record has to go to which bucket?
+
+Bucket internally uses an algorithm called HASH PARTITION that decides which record has to go to which bucket.
+
+>The Hash partition has a formula called hash of the bucket column mod of no.of buckets.
+
+>The hash partition will take the column value for each record & populate the hash value for the column & that hash value will get divided by the 
+   no.of buckets value, mod function is all about remainder, so the remainder value for the above denotes the position of the bucket.
+
+__________________________________________________________________________________________________________________________________
+
+CLUSTERED BY & BUCKETING  (also known as SAMPLING TECHNIQUE)
+**********************************************************************************
+
+>To create bucket tables there is no need of partition table as mandatory.
+>To enable Bucketing concept in hive, we should follw 3 steps:
+
+1)set hive.enforce.bucketing=true;
+2)Create an intermediate table with reference to the bucket table.
+3)Create Bucket table with same columns and data types as of intermediate table
+
+		 PRACTICAL
+		**************
+
+CREATING A NORMAL INTERMEDIATE TABLE :
+****************************************************
+create table intr_cust_bucket(cid int,cname string,cage int,ccity string,csal float)
+row format delimited fields terminated by ','
+tblproperties("skip.header.line.count"="1")
+
+LOAD DATA :-
+**************
+load data local inpath '/home/cloudera/lfs/cust.txt' into table intr_cust_bucket;
+
+CREATING MAIN BUCKET TABLE :-
+*************************************
+create table main_cust_bucket(cid int,cname string,cage int,ccity string,csal float)
+clustered by(ccity) into 5 buckets
+row format delimited fields terminated by ','
+
+INSERTING DATA INTO BUCKETED TABLE BY USING STAGING TABLE :-
+*******************************************************************************
+insert into table main_cust_bucket select * from intr_cust_bucket;
+
+BUCKETS STORED IN HIVE WAREHOUSE:
+***********************************************
+[cloudera@quickstart ~]$ hdfs dfs -ls /user/hive/warehouse/hive_db.db/main_cust_bucket
+Found 5 items
+-rwxrwxrwx   1 cloudera supergroup         55 2022-03-20 06:36 /user/hive/warehouse/hive_db.db/main_cust_bucket/000000_0
+-rwxrwxrwx   1 cloudera supergroup          0 2022-03-20 06:36 /user/hive/warehouse/hive_db.db/main_cust_bucket/000001_0
+-rwxrwxrwx   1 cloudera supergroup        323 2022-03-20 06:36 /user/hive/warehouse/hive_db.db/main_cust_bucket/000002_0
+-rwxrwxrwx   1 cloudera supergroup         90 2022-03-20 06:36 /user/hive/warehouse/hive_db.db/main_cust_bucket/000003_0
+-rwxrwxrwx   1 cloudera supergroup          0 2022-03-20 06:36 /user/hive/warehouse/hive_db.db/main_cust_bucket/000004_0
+
+RETRIVING DATA FROM BUCKETS IN HIVE :
+*************************************************
+>To retrive data from buckets in hive we should use a keyword "TABLESAMPLE" & should give an alias name for it.
+
+hive>  select * from main_cust_bucket TABLESAMPLE(BUCKET 3 OUT OF 5 ON ccity)s;
+OK
+115     DHEERAJ 31      BANGALORE       35000.0
+114     PRAKASH 27      BANGALORE       28000.0
+113     KISHORE 35      BANGALORE       27000.0
+112     KIRAN   34      BANGALORE       20000.0
+111     SRAVANI 25      BANGALORE       2000.0
+110     RAVI    28      BANGALORE       20000.0
+105     SANTOSH 33      BANGALORE       25000.0
+104     ANIRUDH 27      BANGALORE       27000.0
+103     ANIMESH 26      BANGALORE       25000.0
+101     RAJESH  27      BANGALORE       20000.0
+Time taken: 0.183 seconds, Fetched: 10 row(s)
+
+
+use of sampling technique:
+******************************
+select * from <tablename> tablesample(50 percent)s; -----> for a bucket table
+
+>This is used also for a normal table
+
+_______________________________________________________________________________________________________________________
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+							Class - 9
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+JOINS:
+*******
+customers.txt
+ID,Name,Age,Address,Salary
+1,Ross,32,Ahmedabad,2000
+2,Rachel,25,Delhi,1500
+3,Chandler,23,Kota,2000
+4,Monika,25,Mumbai,6500
+5,Mike,27,Bhopal,8500
+6,Phoebe,22,MP,4500
+7,Joey,24,Indore,10000
+
+orders.txt
+OID,Date,Cust_id,Amount
+102,2016-10-08 00:00:00,3,3000
+100,2016-10-08 00:00:00,3,1500
+101,2016-11-20 00:00:00,2,1560
+103,2015-05-20 00:00:00,4,2060
+
+order_item.txt
+oid,ord_date,items,amount
+102,2016-10-08 00:00:00,Pizza,3000
+102,2016-10-08 00:00:00,Juice,3000
+100,2016-10-08 00:00:00,Biryani,1500
+101,2016-11-20 00:00:00,Paneer,1560
+103,20165-05-20 00:00:00,Momos,2060
+
+create table customers(ID int,Name string,Age int,Adress string,Salary float)
+row format delimited fields terminated by ','
+tblproperties("skip.header.line.count"="1")
+
+load data local inpath '/home/cloudera/lfs/cust.txt' into table customers;
+
+create table orders(OID int,Date string,Cust_id int,Amount float)
+row format delimited fields terminated by ','
+tblproperties("skip.header.line.count"="1")
+
+load data local inpath '/home/cloudera/lfs/orders.txt' into table orders;
+
+
+create table order_items(oid int,ord_date string,items string,amount float)
+row format delimited fields terminated by ','
+tblproperties("skip.header.line.count"="1")
+
+load data local inpath '/home/cloudera/lfs/order_items.txt' into table order_items;
+
+NORMAL JOIN(ANSI 89):
+****************************
+select c.id,c.name,o.cust_id,o.amount
+from customers c,orders o
+where c.id=o.cust_id;
+
+NORMAL JOIN(ANSI 92):
+****************************
+select c.id,c.name,o.cust_id,o.amount
+from customers c JOIN orders o
+ON  c.id=o.cust_id;
+
+LEFT JOIN:
+************
+select c.id,c.name,o.cust_id,o.amount
+from customers c LEFT JOIN orders o
+ON  c.id=o.cust_id;
+
+O/P :-
+*****
+1       Ross    NULL    NULL
+2       Rachel  2       1560.0
+3       Chandler        3       3000.0
+3       Chandler        3       1500.0
+4       Monika  4       2060.0
+5       Mike    NULL    NULL
+6       Phoebe  NULL    NULL
+7       Joey    NULL    NULL
+Time taken: 51.231 seconds, Fetched: 8 row(s)
+
+RIGHT JOIN:
+**************
+select c.id,c.name,o.cust_id,o.amount
+from customers c RIGHT JOIN orders o
+ON  c.id=o.cust_id;
+
+O/P :-
+*****
+3       Chandler        3       3000.0
+3       Chandler        3       1500.0
+2       Rachel  2       1560.0
+4       Monika  4       2060.0
+Time taken: 36.609 seconds, Fetched: 4 row(s)
+
+FULL JOIN:
+***********
+select c.id,c.name,o.cust_id,o.amount
+from customers c FULL JOIN orders o
+ON  c.id=o.cust_id;
+
+
+Query for Order items ordered by each customer:
+*******************************************************
+select c.id,c.name,o.cust_id,o.amount,i.items
+from customers c JOIN orders o
+ON  c.id=o.cust_id
+JOIN order_items i
+ON i.oid=o.oid
+order by name;
+
+O/P :-
+*****
+c.id    c.name  o.cust_id       o.amount        i.items
+3       Chandler        3       1500.0  Biryani
+3       Chandler        3       3000.0  Juice
+3       Chandler        3       3000.0  Pizza
+4       Monika  4       2060.0  Momos
+2       Rachel  2       1560.0  Paneer
+Time taken: 52.011 seconds, Fetched: 5 row(s)
+
+VIEWS CREATITION :
+***********************
+crete view <view_name> as
+select c.id,c.name,o.cust_id,o.amount,i.items
+from customers c JOIN orders o
+ON  c.id=o.cust_id
+JOIN order_items i
+ON i.oid=o.oid
+order by name;
+
+---------------------------------------------------------------------------------------------------------------
+					Class - 10
+----------------------------------------------------------------------------------------------------------------
+
+HIVE JOINS:
+*************
+
+1)MAP SIDE JOINS :
+*******************
+>Map side join is a process where joins b/w two tables are performed in the Map phase without the involvement of Reduce phase.
+>Map side joins allows a table to get loaded into memory ensuring a very fast join operation,performed entirely within a mapper & that too without having 
+   to use both map & reduce phases.
+
+a)By specifying the keyword, /*+ MAPJOIN(table_name) */ in the join statement.
+b)whenever we are executing MAP SIDE JOINS ,we should set one properties,so that it will allow us to perform the map side join
+PROPERTY IS :- set hive.auto.convert.join=true;
+
+
+CREATING  TABLES & LOADING DATA INTO IT :
+*****************************************************
+CREATE TABLE IF NOT EXISTS dataset1(id int,first_name string,last_name string,email string,gender string,ip_address string)
+row format delimited fields terminated by  ','
+tblproperties("skip.header.line.count"="1");
+
+CREATE TABLE IF NOT EXISTS dataset2(id int,first_name string,last_name string)
+row format delimited fields terminated by  ','
+tblproperties("skip.header.line.count"="1");
+
+load data local inpath '/home/cloudera/lfs/dataset1.csv' into table dataset1;
+
+load data local inpath '/home/cloudera/lfs/dataset2.csv' into table dataset2;
+
+>Before execution in hive/beeline terminal we should set one property i.e,
+set hive.auto.convert.join=true;
+
+In Beeline :
+***********
+select /*+ MAPJOIN(dataset2) */ d1.id,d1.email,d2.first_name,d2.last_name
+from dataset1 d1 JOIN dataset2 d2
+ON d1.id=d2.id
+LIMIT 10;
+
+In Hive terminal :
+*******************
+select  d1.id,d1.email,d2.first_name,d2.last_name
+from dataset1 d1 JOIN dataset2 d2
+ON d1.id=d2.id
+LIMIT 10;
+
+
+2)BUCKET-MAP JOIN :
+*************************
+The constraint for performing Bucket-Map join is :
+>To perform bucketing, we need to have bucketed tables.
+>If tables being joined are bucketed on the join columns, & the no.of buckets in one table is a multiple of the no.of buckets in the other table, the buckets 
+   can be joined with each other.
+
+>Property to be set
+set hive.optimize.bucketmapjoin = true;
+
+
+CREATING THE TABLES WITH  BUCKETS & LOADING DATA INTO IT :
+*****************************************************************************
+CREATE TABLE IF NOT EXISTS dataset1_bkt(id int,first_name string,last_name string,email string,gender string,ip_address string)
+clustered by (first_name) into 4 buckets
+row format delimited fields terminated by  ','
+tblproperties("skip.header.line.count"="1");
+
+CREATE TABLE IF NOT EXISTS dataset2_bkt(id int,first_name string,last_name string)
+clustered by (first_name) into 8 buckets
+row format delimited fields terminated by  ','
+tblproperties("skip.header.line.count"="1");
+
+load data local inpath '/home/cloudera/lfs/dataset1.csv' into table dataset1_bkt;
+
+load data local inpath '/home/cloudera/lfs/dataset1.csv' into table dataset2_bkt;
+
+>Before execution in hive/beeline terminal we should set one property i.e,
+set hive.optimize.bucketmapjoin = true;
+
+In Beeline :
+***********
+select /*+ MAPJOIN(dataset2_bkt) */ d1.id,d1.email,d2.first_name,d2.last_name
+from dataset1 bkt d1 JOIN dataset2_bkt d2
+ON d1.id=d2.id
+LIMIT 10;
+
+In Hive terminal :
+*******************
+select  d1.id,d1.email,d2.first_name,d2.last_name
+from dataset1_bkt d1 JOIN dataset2_bkt d2
+ON d1.id=d2.id
+LIMIT 10;
+
+
+3)Sort Merge Bucket(SMB)Map Join:
+*****************************************
+1)To perform this join, we need to have the data in the bucketed table sorted by the join column.
+2)The joining key of the 2 bucketed column should be same
+3)The no.of bucketed columns should be same for both tables
+
+For performing the SMB-Map join,we need to set the following properties:
+set hive.input.format=org.apache.hive.ql.io.BucketizedHiveInputFormat;
+set hive.optimize.bucketmapjoin =true;
+set hive.optimize.bucketmapjoin.sortedmerge =true;
+
+
+CREATING THE 2ND TABLE WITH 4 BUCKETS:
+****************************************************
+CREATE TABLE IF NOT EXISTS dataset2_bkt_SMB(id int,first_name string,last_name string)
+clustered by (first_name) into 4 buckets
+row format delimited fields terminated by  ','
+tblproperties("skip.header.line.count"="1");
+
+LOADING DATA IN SORTED ORDER FOR BOTH TABLES :
+***************************************************************
+insert overwrite dataset1_ bkt select * from dataset1 sort by first_name;
+
+insert overwrite dataset2_ bkt_SMB select * from dataset2 sort by first_name;
+
+In Beeline :
+***********
+select /*+ MAPJOIN(dataset2_bkt_SMB) */ d1.id,d1.email,d2.first_name,d2.last_name
+from dataset1 bkt d1 JOIN dataset2_bkt_SMB d2
+ON d1.id=d2.id
+LIMIT 10;
+
+In Hive terminal :
+*******************
+select  d1.id,d1.email,d2.first_name,d2.last_name
+from dataset1 bkt d1 JOIN dataset2_bkt_SMB d2
+ON d1.id=d2.id
+LIMIT 10;
+___________________________________________________________________________________________________________________________________
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+							Class - 11
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+ACID Transactional Features in HIVE :
+******************************************
+Points to consider:
+
+1)Only ORC ( ObjectRow ) storage format is supported presently.
+2)Table must have CLUSTERED BY column
+3)Table properties must have: "transactional"="true"
+4)External tables cannot be transactional.
+5)Transactional tables cannot be readby non-ACID sessions.
+6)Table cannot be loaded using "LOAD DATA..." command.
+7)Once table is created as transactional, it cannot be converted to non-ACID afterwards.
+
+ERRORS
+1)[Error 10302]: Updating values of bucketing columns is not supported.
+Since ACID table must be bucketed to enable transactional property,you cannot run UPDATE cmnd to set BUCKETED column.In the table DDL,you can see "CLUSTERED BY(pres_bs) INTO 4 BUCKETS".Now we cannot run UPDATE cmnd with set pres_bs='any_value'.
+SOLUTION: Change bucketed column if you really have to run UPDATE on that column.
+
+2)[Error 10292]: Updating values of partition columns is not supported.
+Similar to previous constraint,if you have created partitioned table then you cannot run UPDATE cmnd to set PARTITION column to new value.If it is non-transactional,then anyways you would be re-writing entire partition.So won't get this error in non-ACID tables.
+SOLUTION: Change partitioned column if you really have to run UPDATE on that column.
+
+3)[Error ]:INSERT OVERWRITE not allowed on table with OutputFormat that implements AcidOutputFormat while transaction manager that supports ACID is in use.
+You cannot execcute ISERT OVERWRITE command if you are using hive ACID tables.
+SOLUTION: Run Truncate & INSERT in place of INSERT OVERWRITE query.
+
+4)[Error 10265]:This command is not allowed on an ACID table usa_prez_tx with a non-ACID transaction manager.Failed command:null
+You cannot use ACID table to load other tables,non-ACID in non-ACID session
+[set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;]
+
+Following properties must be set at client side to use transactional tables :
+set hive.support.concurrency=true;
+set hive.enforce.bucketing=true;
+set hive.exec.dynamic.partition.mode=nonstrict;
+set hive.compactor.initiator.on=true;
+set hive.compactor.worker.threads=1;
+set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager; ---> this is imprtnt property rltd to ACID 
+
+we cannot go with "insert overwrite" in ACID transactions, we should use only "insert into"
+
+Important :
+************
+1)hive -f :
+Whenever we want some .hql files to be executed in your shell we use above cmnd.
+2)hive -e:
+Whenever we want to execute hive queries in your shell we use the above cmnd.
+
+Hive Variables :
+Single Column:
+set id =101;
+select * from ext_emp where id=${hiveconf:id};
+
+Multiple Columns:
+set city = 'Hinjewadi';
+select * from ext_emp where id=${hiveconf :id} OR city=${hiveconf :city};
+
+Set Table:
+set table = ext_emp ;
+select * from ${hiveconf : table}  where id=${hiveconf :id} OR city=${hiveconf :city};
+
+Magic Commands in Hive :
+
+1)Execute Edgenode Commands:
+If we want to execute the edgenode cmnds then, prefix ur cmnd with exclamatory symbol " ! "
+eg: !pwd
+      !ls -ltr
+
+2)Execute Hadoop Commands:
+If we want to execute the Hadoop cmnds then, prefix ur cmnd with exclamatory symbol " dfs "
+eg: dfs -ls /user/cloudera/lfs/ 
+
+____________________________________________________________________________________________________________________________
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+							Class - 12
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+FILE COMPRESSIONS :
+************************
+Compressions is implemented in Hadoop as Hive,MapReduce, or any other processing components that results in several Network bandwidths b/w the nodes
+ for 1/10 & for storage(not to mention the redundant storage to help fault tolerance).To reduce the amt of disk space that the Hive queries use, u should
+ enable the Hive compression codecs.
+
+ADVANTAGES :
+****************
+1)Occupies less space.
+2)Uses less bandwidth in n/w.
+
+Files can be compressed in any phase of job :
+*************************************************
+1)Compressing Input file.
+2)Compressing Map Output.
+3)Compressing Reducer Output.
+
+To compress your Map Output the property is :
+set mapred.compress.map.output;
+
+
+Different codec are :
+**********************
+Compression Format	Tool	Algorithm	File Extension	Splittable
+	Gzip		gzip	 DEFLATE		 .gz		   No
+	bzip2		bzip	 bzip2		 .bz2		   Yes
+	LZO		lzop	 LZO		 .lzo		Yes if indexed
+	Snappy		N/A	 snappy		 .snappy		   No
+
+
+Setting properties in HIVE for compression codecs :
+********************************************************
+set hive.exec.compress.output=true;
+set mapreduce.output.fileoutputformat.compress=true;
+set mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.BZip2codec;
+
+Windowing Function in Hive :-
+*********************************
+Windowing allows you to create a window on a set of data further allowing agggregation surrounding that data.Windowing in Hive is introduced from Hive 0.11.
+
+Windowing in Hive includes the following functions
+1)Lead : This function returns the values from the following rows.You can specify an integer offset which designates the row position else it will take 
+              the default integer offset as 1.
+	>The no.of rows to lead can optionally be specified.If the no.of rows to lead is not specified,the lead is one row.
+	>Returns null when the lead for the current row extends beyond the end of the window.
+
+2)Lag : This  function returns the values of the previous row.You can specify an integer offset which designates the row position else it will take the 
+*******    default integer offset as 1.
+	>The no.of rows to lag can optionally be specified.If the no.of rows to lag is not specified,the lag is one row.
+	>Returns null when the lag for the current row extends before the begining of the window.
+
+3)FIRST_VALUE :- It returns the value of the first row from that window.
+
+4)last_VALUE :- It is the reverse of FIRST_VALUE.It returns the value of the lsst row from that window.
+
+5)The OVER clause :- OVER with standard aggregates :
+a)COUNT: It returns the count of all the values for the expression written in the over clause.
+
+b)SUM :- It returns the sum of all the values for the expression written in the over clause.
+
+c)MIN :- It returns the minimum  value of the column for the rows in that over clause.
+
+d)MAX :- It returns the maximum value of the column for the rows in that over clause.
+
+e)AVG  :- It returns the average value of the column for the rows  that over clause returns.
+
+6) OVER with PARTITIONED BY & ORDER BY with one or more partitioning and/or ordering columns :
+
+a)RANK :- The rank function will return the rank of the values as per the rslt set of the over clause.If 2 values are same then it will give the 
+*********    same rank to those 2 values & then for the nxt value.the sub-sequent rank will be skipped.
+
+b)DENSE_RANK :- It is same as the rank () function but the difference is if any duplicate value is present then the rank will not be skipped for the subsequent 
+******************    rows.Each unique value will get the ranks in a sequence.
+
+c)ROW_NUMBER :- Row number will return the continuous sequence of numbers for all the rows of the result set of the over clause.
+********************
+d)PERCENT_RANK :- It returns the percentage rank of each row within the rslt set of over clause.percent_rank is calculated in accordance with the rank of 
+*********************	 the row & the calculation is as follows (rank-1)/(total_rows_in_group-1).If the rslt set has only one row then the percent_rank will be 0.
+
+e)NTILE :- It returns the bucket no.of the particular value.For suppose if u say ntile(5) then it will create 5 buckets based on the rslt set of the over clause after that 
+*********	 it will place the first 20% of the records in the 1st bucket & so on til 5th bucket.
+
+____________________________________________________________________________________________________________________________________
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+							Class - 13
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+					   INTEGRATION OF SQOOP & HIVE
+					  ****************************************
+
+MANUAL APPROACH:
+************************
+sqoop import \
+--connect jdbc:mysql://localhost/hive_db \
+--username root \
+--password-file /user/cloudera/hfs \
+--table departments
+
+
+create table departments(id int,name string)
+row formate delimited fields terminated by ','
+location '/user/cloudera/departments';
+
+DIRECT PROCESS:
+********************
+sqoop import \
+--connect jdbc:mysql://localhost/hive_db \
+--username root \
+--password-file /user/cloudera/hfs \
+--table departments \
+--hive-import --create-hive-table --hive-table hive_Db.<table_name>
+
+
+
+#>For doubts reference in Google :- sqoop guide 1.4.6
+
+___________________________________________________________________________________________________________________________________
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+							Class - 14
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+					      	 SerDe & FILE FORMATS
+						****************************
+SerDe [Serializatoin(Ser) + Deserializatio(De)] :
+****************************************************
+Serialization is the process of transforming structured objects into a byte stream for transmission over the n/w for writing the data to persistent storage.
+
+Deserialization is the process of transforming byte stream into structured objects  for transmission over the n/w .
+
+
+Row Based Vs Column Based File Format :
+*********************************************
+a)Row Based :
+emp table:
+eid,ename,esal,eloc
+101,saif,100,mumbai
+102,tausif,200,pune
+103,ram,300,balewadi
+
+>Write is easy but read affects performance when we read only few columns.
+>Compressions does not performs well.
+>For Aggregations there is time consumption.
+
+b)Column Based :
+emp table:
+eid	          ename   	      esal 		eloc
+101,102,103     saif,tausif,ram     100,200,300    mumbai,pune,balewadi
+
+>Write is not easy but reads gives good performance.
+>Compression performs better over here.
+>Aggregations gives good performance.
+
+File Formats :
+*************
+1)ORC(ObjectRowColumn) :
+*******************************
+i)Column based file format.
+ii)ORC file format is best suited when working with Hive but not other platforms.
+iii)OrC consumes less storage upto 70-80% & gives optimal performance.
+
+2)Parquet :
+************
+i)Column based file format.
+ii)Parquet file format has good compatability with all platforms like Hive, HDFS, Spark,Casandra etc.
+iii)Parquet provides faster reads & slower writes.
+iv)Parquet internally stores the schema of that file.
+
+3)Avro :
+********
+i)Row based file format.
+ii)Avro  provides faster writes & slower reads .
+iii)Avro supports schema evolution.
+iv)Avro is ideal for querying all columns.
+
+______________________________________________________________________________________
+
+Parquet Data :
+***************
+sqoop import \
+--connect jdbc:mysql://localhost/retail_db \
+--username root --password-file /user/cloudera/hfs \
+--target-dir /user/cloudera/sqoop/prqt_ff_dept \
+--as-parquetfile
+
+create external table prqt_ff(dept_id int,dept_name string)
+row format delimited fields terminated by ','
+stored as parquet;
+
+load data inpath '/user/cloudera/sqoop/prqt_ff_dept' overwrite into table prqt_ff;
+
+Avro Data :
+************
+sqoop import \
+--connect jdbc:mysql://localhost/retail_db \
+--username root --password-file /user/cloudera/hfs \
+--target-dir /user/cloudera/sqoop/avro_ff_dept \
+--as-avrodatfile
+
+create external table avro_ff(dept_id int,dept_name string)
+row format delimited fields terminated by ','
+stored as avro
+location '/user/cloudera/sqoop/avro_ff_dept/';
+
+_______________________________________________________________________________________________________________________________
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+							Class -15
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+How to load the JSON data & Xml data :
+
+>2ways to load JSON data & Xml data
+
+1)To use jars/jar file
+steps:
+******
+1)Download JSON JAR from:-  http://www.congiu.net/hive-json-serde/1.3.7/cdh5/
+2) JSON file as src.
+3)Create directory in hdfs
+4)Copy file
+hdfs dfs -put <srcpath> <dest_path>
+5)Add the jar file in Hive terminal
+add jar <path>
+6)create table
+
+create external table tbl_json (   )
+row format serde 'org.openx.data.jsonserde.jsonSerDe'
+location '<path>' ;
+
+
+2)To use some JSON objects
+>we have to create a table with one column i.e, of datatype string & while trying to do a select stmnt we need to use get_json function.
+
+
+
+============================================ THE END ===========================================
+
+EXECUTE HIVE CMNDS FROM LINUX TERMIAL:
+******************************************************
+
+
+vi stud.hql
+
+use database suma_db;
+
+create table stud_hive(sno int,sname string,gender string,branch stirng,sec string)
+row format delimited fields terminated by ','
+stored as textfile;
+
+show tables;
+
+load data local inpath '/home/cloudera/stud' into table stud_hive;
+
+select * from stud_hive;
+
+
+execute the above file:
+hive -f stud.hql
+
+O/P :
+****
+[cloudera@quickstart hqlscrpt]$ hive -f stud.hql
+
+Logging initialized using configuration in file:/etc/hive/conf.dist/hive-log4j.properties
+OK
+Time taken: 0.915 seconds
+OK
+Time taken: 4.865 seconds
+OK
+practise
+stud_hive
+Time taken: 0.342 seconds, Fetched: 2 row(s)
+Loading data to table suma_db.stud_hive
+Table suma_db.stud_hive stats: [numFiles=1, totalSize=62]
+OK
+Time taken: 1.489 seconds
+OK
+1       susi    f       cse     A
+2       suma    f       cse     A
+3       sri     m       ece     B
+4       vishnu  m       eee     C
+
+
+Important Note:
+******************
+>To create same table as employee along with data :-
+create table emp_update as select id,name,city from employee;
+
+>To create just schema as employee table but not the data :-
+create table emp_new like employee;
+
+
+EXECUTE LINUX & HDFS CMNDS FROM HIVE TERMINAL :
+*****************************************************************
+>To execute linux & hdfs cmnds from hive terminal we have to prefix the cmnd with "!"
+
+hive> !hdfs dfs -ls /user;
+Found 8 items
+drwxr-xr-x   - cloudera supergroup          0 2022-04-14 09:17 /user/cloudera
+drwxr-xr-x   - mapred   hadoop              0 2017-10-23 10:29 /user/history
+drwxrwxrwx   - hive     supergroup          0 2017-10-23 10:31 /user/hive
+drwxrwxrwx   - hue      supergroup          0 2017-10-23 10:30 /user/hue
+drwxrwxrwx   - jenkins  supergroup          0 2017-10-23 10:30 /user/jenkins
+drwxrwxrwx   - oozie    supergroup          0 2017-10-23 10:30 /user/oozie
+drwxrwxrwx   - root     supergroup          0 2017-10-23 10:30 /user/root
+drwxr-xr-x   - hdfs     supergroup          0 2017-10-23 10:31 /user/spark
+
+
